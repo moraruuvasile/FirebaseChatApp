@@ -1,12 +1,12 @@
 package com.example.firebasechatapp
 
 import android.os.Bundle
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.widget.Toolbar
+import com.example.firebasechatapp.Adapters.ViewPagerAdapter
+
+import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -17,7 +17,17 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar_main)
         supportActionBar?.title = ""
 
+        view_pager.adapter = ViewPagerAdapter(this)
+        TabLayoutMediator(tab_layout, view_pager) { tab, i ->
+            when (i) {
+                0 -> tab.text = "Chats"
+                1 -> tab.text = "Search"
+                else -> tab.text = "Settings"
+            }
+
+        }.attach()
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
