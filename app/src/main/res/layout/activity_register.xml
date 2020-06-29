@@ -7,17 +7,6 @@
     android:background="@drawable/register"
     tools:context=".Activities.RegisterActivity">
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tab_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tabTextColor="@android:color/white" />
-
     <Button
         android:id="@+id/button_register"
         android:layout_width="0dp"
@@ -30,7 +19,8 @@
         app:layout_constraintEnd_toEndOf="@+id/password_register"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/password_register"
-        app:layout_constraintTop_toBottomOf="@+id/password_register" />
+        app:layout_constraintTop_toBottomOf="@+id/password_register"
+        android:onClick="register_btn"/>
 
     <EditText
         android:id="@+id/password_register"
@@ -52,7 +42,7 @@
         android:layout_margin="10dp"
         android:ems="10"
         android:hint="Email"
-        android:inputType="textPersonName|textEmailAddress"
+        android:inputType="textEmailAddress"
         app:layout_constraintBottom_toTopOf="@+id/password_register"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -70,7 +60,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tab_layout"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
 

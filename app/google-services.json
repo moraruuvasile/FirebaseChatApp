@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "771483309056",
+    "firebase_url": "https://whatsapp-f4d4c.firebaseio.com",
+    "project_id": "whatsapp-f4d4c",
+    "storage_bucket": "whatsapp-f4d4c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771483309056:android:23874374174e2656e074e5",
+        "android_client_info": {
+          "package_name": "com.example.firebasechatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "771483309056-dtk50sda0pplhkequc51jva89he5h5s4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAs2ih0Vd20BVGpnHQAm8MkHCmQ_HHh580"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "771483309056-dtk50sda0pplhkequc51jva89he5h5s4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

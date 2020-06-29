@@ -13,8 +13,8 @@ class ViewPagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {
 
     override fun createFragment(position: Int): Fragment {
         when (position) {
-            1 -> return ChatsFragment()
-            2 -> return SearchFragment()
+            0 -> return ChatsFragment()
+            1 -> return SearchFragment()
             else -> return SettingsFragment()
         }
     }
