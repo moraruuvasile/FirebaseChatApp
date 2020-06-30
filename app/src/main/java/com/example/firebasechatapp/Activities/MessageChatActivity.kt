@@ -1,12 +1,128 @@
 package com.example.firebasechatapp.Activities
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import com.example.firebasechatapp.Model.User
 import com.example.firebasechatapp.R
+import com.example.firebasechatapp.Util.Const
+import com.example.firebasechatapp.Util.FireObj
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.Task
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.StorageTask
+import com.google.firebase.storage.UploadTask
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_message_chat.*
+import kotlinx.android.synthetic.main.activity_message_chat.profile_name
+import kotlinx.android.synthetic.main.activity_message_chat.settings_image
+import kotlin.collections.HashMap
 
 class MessageChatActivity : AppCompatActivity() {
+    private val REQUEST_CODE: Int = 1990
+    lateinit var receiverId: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message_chat)
+        send_btn.bringToFront()
+        receiverId = intent.getStringExtra(Const.VISIT_ID)!!
+        setUserNameAndAvatar()
+        send_btn.setOnClickListener {
+            sendMessageToUser()
+        }
+        attach_btn.setOnClickListener {
+            val intent = Intent().apply {
+                type = "image/*"
+                action = Intent.ACTION_GET_CONTENT
+            }
+            startActivityForResult(Intent.createChooser(intent, "Pick Image"), REQUEST_CODE)
+        }
+    }
+
+    private fun setUserNameAndAvatar() {
+        FireObj.refXUser(receiverId)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onCancelled(error: DatabaseError) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val user = snapshot.getValue(User::class.java)
+                        user?.let {
+                            profile_name.text = it.username
+                            Picasso.get().load(it.profile)
+                                .placeholder(R.drawable.ic_baseline_face_24)
+                                .into(settings_image)
+                        }
+                    }
+                }
+            }
+            )
+    }
+
+
+    private fun sendMessageToUser() {
+        val messageHashMap = HashMap<String, Any>()
+        messageHashMap["sender"] = FireObj.userId
+        messageHashMap["message"] = edit_mesage.text.toString()
+        messageHashMap["receiver"] = receiverId
+        messageHashMap["isSeen"] = false
+        messageHashMap["url"] = ""
+
+        FireObj.refSendMessage(messageHashMap).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                FireObj.refChatList(receiverId)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(error: DatabaseError) {
+                        }
+
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (!snapshot.exists()) {
+                                Log.d("adasdas", "onDataChange:snapshot ")
+                                FireObj.refChatList(receiverId).child("id").setValue(receiverId)
+                                FireObj.refChatListReceiver(receiverId)
+                            }
+                        }
+                    })
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE
+            && resultCode == Activity.RESULT_OK
+            && data!!.data != null
+        ) {
+            val filePath = FireObj.storageRef("Chat Images").child("${FireObj.key()}.jpg")
+            val uploadTask: StorageTask<*>
+            uploadTask = filePath.putFile(data.data!!)
+
+            uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let { throw it }
+                }
+                return@Continuation filePath.downloadUrl
+            }).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val messageHashMap = HashMap<String, Any>()
+                    messageHashMap["sender"] = FireObj.userId
+                    messageHashMap["message"] = "sent you an image"
+                    messageHashMap["receiver"] = receiverId
+                    messageHashMap["isSeen"] = false
+                    messageHashMap["url"] = task.result.toString()
+                    FireObj.refSendMessage(messageHashMap)
+                }
+            }
+        }
     }
 }

@@ -2,20 +2,16 @@ package com.example.firebasechatapp.Fragments
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Debug
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
-import androidx.core.view.isInvisible
 import com.example.firebasechatapp.Model.User
 import com.example.firebasechatapp.R
 import com.example.firebasechatapp.Util.FireObj
@@ -25,7 +21,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
@@ -108,17 +103,17 @@ class SettingsFragment : Fragment() {
     private fun uploadeImageToDatabase() {
         progressBar.visibility = View.VISIBLE
 
-        val fileRef = FirebaseStorage.getInstance().reference.child("User Images")
+        val filePath = FirebaseStorage.getInstance().reference.child("User Images")
             .child(System.currentTimeMillis().toString() + ".jpg")
 
         val uploadTask: StorageTask<*>
-        uploadTask = fileRef.putFile(imageURI!!)
+        uploadTask = filePath.putFile(imageURI!!)
 
         uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
             if (!task.isSuccessful) {
                 task.exception?.let { throw it }
             }
-            return@Continuation fileRef.downloadUrl
+            return@Continuation filePath.downloadUrl
         }).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val hashMap = HashMap<String, Any>()
@@ -151,7 +146,10 @@ class SettingsFragment : Fragment() {
     private fun updateusername(str: String) {
         progressBar.visibility = View.VISIBLE
         val hashMap = HashMap<String, Any>()
-        hashMap["username"] = str
+        var newStr = str
+        if (newStr =="") newStr = ". . ."
+        hashMap["username"] = newStr
+        hashMap["search"] = newStr.toLowerCase()
         FireObj.refUser.updateChildren(hashMap).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 progressBar.visibility = View.INVISIBLE
