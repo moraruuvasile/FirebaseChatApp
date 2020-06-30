@@ -3,10 +3,12 @@ package com.example.firebasechatapp.Activities
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.firebasechatapp.Adapters.ChatsAdapter
+import com.example.firebasechatapp.Model.Chat
 import com.example.firebasechatapp.Model.User
 import com.example.firebasechatapp.R
 import com.example.firebasechatapp.Util.Const
@@ -19,21 +21,23 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_message_chat.*
-import kotlinx.android.synthetic.main.activity_message_chat.profile_name
-import kotlinx.android.synthetic.main.activity_message_chat.settings_image
-import kotlin.collections.HashMap
 
 class MessageChatActivity : AppCompatActivity() {
     private val REQUEST_CODE: Int = 1990
     lateinit var receiverId: String
+    lateinit var chatsAdapter: ChatsAdapter
+    private var listMessage = ArrayList<Chat>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message_chat)
-        send_btn.bringToFront()
+
         receiverId = intent.getStringExtra(Const.VISIT_ID)!!
-        setUserNameAndAvatar()
+
+        send_btn.bringToFront()
+
+        setUserNameAndAvatar_RecyclerView()
         send_btn.setOnClickListener {
             sendMessageToUser()
         }
@@ -44,9 +48,14 @@ class MessageChatActivity : AppCompatActivity() {
             }
             startActivityForResult(Intent.createChooser(intent, "Pick Image"), REQUEST_CODE)
         }
+
+        receiveMessages()
+
     }
 
-    private fun setUserNameAndAvatar() {
+
+
+    private fun setUserNameAndAvatar_RecyclerView() {
         FireObj.refXUser(receiverId)
             .addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
@@ -61,11 +70,50 @@ class MessageChatActivity : AppCompatActivity() {
                             Picasso.get().load(it.profile)
                                 .placeholder(R.drawable.ic_baseline_face_24)
                                 .into(settings_image)
+
+                            setRecyclerView(user.profile)
+
                         }
                     }
                 }
             }
             )
+    }
+
+    private fun setRecyclerView(profile: String) {
+        chatsAdapter = ChatsAdapter(listMessage, profile)
+
+        message_recycler.apply {
+            val layout = LinearLayoutManager(context)
+            layout.stackFromEnd = true
+            layoutManager = layout
+            adapter = chatsAdapter
+        }
+
+    }
+
+    private fun receiveMessages() {
+        FireObj.refToChats()
+            .addValueEventListener(object :ValueEventListener{
+                override fun onCancelled(error: DatabaseError) {
+                }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                   listMessage.clear()
+                    for (chatRaw in snapshot.children){
+                        val chat = chatRaw.getValue(Chat::class.java)
+
+                        if (chat?.receiver == FireObj.userId && chat.sender == receiverId
+                            || chat?.receiver == receiverId && chat.sender == FireObj.userId ){
+                            listMessage.add(chat)
+                        }
+                    }
+                    chatsAdapter.notifyDataSetChanged()
+                    message_recycler.scrollToPosition(listMessage.size-1)
+
+                }
+
+            })
     }
 
 
@@ -76,6 +124,7 @@ class MessageChatActivity : AppCompatActivity() {
         messageHashMap["receiver"] = receiverId
         messageHashMap["isSeen"] = false
         messageHashMap["url"] = ""
+        edit_mesage.setText("")
 
         FireObj.refSendMessage(messageHashMap).addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -116,7 +165,7 @@ class MessageChatActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val messageHashMap = HashMap<String, Any>()
                     messageHashMap["sender"] = FireObj.userId
-                    messageHashMap["message"] = "sent you an image"
+                    messageHashMap["message"] = "vaSea"
                     messageHashMap["receiver"] = receiverId
                     messageHashMap["isSeen"] = false
                     messageHashMap["url"] = task.result.toString()
