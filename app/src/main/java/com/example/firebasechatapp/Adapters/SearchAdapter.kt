@@ -67,10 +67,5 @@ class SearchAdapter(val listUsers:List<User>, val isChat:Boolean):RecyclerView.A
                     .show()
             }
         }
-
-
-
-
-
     }
 }

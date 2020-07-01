@@ -37,10 +37,10 @@ object FireObj {
 
     }
 
-    fun refChatList(userIdVisit: String): DatabaseReference {
+    fun refChatList(): DatabaseReference {
         return FirebaseDatabase.getInstance().reference.child("ChatList")
             .child(userId)
-            .child(userIdVisit)
+
     }
 
     fun refChatListReceiver(userIdVisit: String): Task<Void> {

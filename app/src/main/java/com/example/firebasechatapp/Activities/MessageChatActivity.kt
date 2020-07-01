@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.firebasechatapp.Adapters.ChatsAdapter
+import com.example.firebasechatapp.MainActivity
 import com.example.firebasechatapp.Model.Chat
 import com.example.firebasechatapp.Model.User
 import com.example.firebasechatapp.R
@@ -33,11 +34,21 @@ class MessageChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_message_chat)
 
+        setSupportActionBar(toolbar_main)
+        supportActionBar?.title = ""
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar_main.setNavigationOnClickListener{
+            val intent = Intent(this@MessageChatActivity, WelcomeActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
+        }
+
         receiverId = intent.getStringExtra(Const.VISIT_ID)!!
 
         send_btn.bringToFront()
 
-        setUserNameAndAvatar_RecyclerView()
+        setUserNameAndAvatarAndRecyclerView()
         send_btn.setOnClickListener {
             sendMessageToUser()
         }
@@ -55,7 +66,7 @@ class MessageChatActivity : AppCompatActivity() {
 
 
 
-    private fun setUserNameAndAvatar_RecyclerView() {
+    private fun setUserNameAndAvatarAndRecyclerView() {
         FireObj.refXUser(receiverId)
             .addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
@@ -93,13 +104,12 @@ class MessageChatActivity : AppCompatActivity() {
     }
 
     private fun receiveMessages() {
-        FireObj.refToChats()
-            .addValueEventListener(object :ValueEventListener{
+        FireObj.refToChats().addValueEventListener(object :ValueEventListener{
                 override fun onCancelled(error: DatabaseError) {
                 }
 
                 override fun onDataChange(snapshot: DataSnapshot) {
-                   listMessage.clear()
+                  listMessage.clear()
                     for (chatRaw in snapshot.children){
                         val chat = chatRaw.getValue(Chat::class.java)
 
@@ -110,7 +120,6 @@ class MessageChatActivity : AppCompatActivity() {
                     }
                     chatsAdapter.notifyDataSetChanged()
                     message_recycler.scrollToPosition(listMessage.size-1)
-
                 }
 
             })
@@ -128,7 +137,7 @@ class MessageChatActivity : AppCompatActivity() {
 
         FireObj.refSendMessage(messageHashMap).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                FireObj.refChatList(receiverId)
+                FireObj.refChatList().child(receiverId)
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onCancelled(error: DatabaseError) {
                         }
@@ -136,7 +145,7 @@ class MessageChatActivity : AppCompatActivity() {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             if (!snapshot.exists()) {
                                 Log.d("adasdas", "onDataChange:snapshot ")
-                                FireObj.refChatList(receiverId).child("id").setValue(receiverId)
+                                FireObj.refChatList().child(receiverId).child("id").setValue(receiverId)
                                 FireObj.refChatListReceiver(receiverId)
                             }
                         }

@@ -25,9 +25,10 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar_main)
         supportActionBar?.title = ""
 
-        //initiate user&reference
+        //initiate user&reference+ ref to all users
         FireObj.userIdInit()
         FireObj.refUserInit()
+        FireObj.refAllfUsersInit()
 
         view_pager.adapter = ViewPagerAdapter(this)
         TabLayoutMediator(tab_layout, view_pager) { tab, i ->
