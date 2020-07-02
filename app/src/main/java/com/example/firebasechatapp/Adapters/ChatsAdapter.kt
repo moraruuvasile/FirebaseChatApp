@@ -30,6 +30,10 @@ class ChatsAdapter(val chatList: List<Chat>, val resPhoto: String): RecyclerView
             Picasso.get().load(resPhoto).into(holder.itemView.profile_image)
         }
 
+        //view for seen vs sent
+        if(chat.isSeen)
+            holder.itemView.text_seen.text = "seen"
+
         // View for sent photos
         if (chat.message == "vaSea"&& chat.url != ""){
             holder.itemView.text_message.visibility = View.GONE
@@ -48,7 +52,5 @@ class ChatsAdapter(val chatList: List<Chat>, val resPhoto: String): RecyclerView
         return if(chatList[position].sender == FireObj.userId) 1 else 0
     }
 
-    inner class ViewHolder(itemView: View) :RecyclerView.ViewHolder(itemView){
-
-    }
+    inner class ViewHolder(itemView: View) :RecyclerView.ViewHolder(itemView)
 }

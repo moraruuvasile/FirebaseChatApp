@@ -18,6 +18,7 @@ import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.StorageTask
 import com.google.firebase.storage.UploadTask
@@ -29,6 +30,8 @@ class MessageChatActivity : AppCompatActivity() {
     lateinit var receiverId: String
     lateinit var chatsAdapter: ChatsAdapter
     private var listMessage = ArrayList<Chat>()
+    lateinit var seenListener: ValueEventListener
+    var reference: DatabaseReference = FireObj.refToChats()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +40,7 @@ class MessageChatActivity : AppCompatActivity() {
         setSupportActionBar(toolbar_main)
         supportActionBar?.title = ""
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar_main.setNavigationOnClickListener{
+        toolbar_main.setNavigationOnClickListener {
             val intent = Intent(this@MessageChatActivity, WelcomeActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
@@ -59,11 +62,10 @@ class MessageChatActivity : AppCompatActivity() {
             }
             startActivityForResult(Intent.createChooser(intent, "Pick Image"), REQUEST_CODE)
         }
-
         receiveMessages()
+        seenMessage(receiverId)
 
     }
-
 
 
     private fun setUserNameAndAvatarAndRecyclerView() {
@@ -104,25 +106,28 @@ class MessageChatActivity : AppCompatActivity() {
     }
 
     private fun receiveMessages() {
-        FireObj.refToChats().addValueEventListener(object :ValueEventListener{
-                override fun onCancelled(error: DatabaseError) {
-                }
+        FireObj.refToChats().addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {
+            }
 
-                override fun onDataChange(snapshot: DataSnapshot) {
-                  listMessage.clear()
-                    for (chatRaw in snapshot.children){
-                        val chat = chatRaw.getValue(Chat::class.java)
+            override fun onDataChange(snapshot: DataSnapshot) {
+                listMessage.clear()
+                for (chatRaw in snapshot.children) {
+                    val chat = chatRaw.getValue(Chat::class.java)
+                    Log.d("vasea", "onDataChange: receiver ")
 
-                        if (chat?.receiver == FireObj.userId && chat.sender == receiverId
-                            || chat?.receiver == receiverId && chat.sender == FireObj.userId ){
-                            listMessage.add(chat)
-                        }
+
+                    if (chat?.receiver == FireObj.userId && chat.sender == receiverId
+                        || chat?.receiver == receiverId && chat.sender == FireObj.userId
+                    ) {
+                        listMessage.add(chat)
                     }
-                    chatsAdapter.notifyDataSetChanged()
-                    message_recycler.scrollToPosition(listMessage.size-1)
                 }
+                chatsAdapter.notifyDataSetChanged()
+                message_recycler.scrollToPosition(listMessage.size - 1)
+            }
 
-            })
+        })
     }
 
 
@@ -145,7 +150,8 @@ class MessageChatActivity : AppCompatActivity() {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             if (!snapshot.exists()) {
                                 Log.d("adasdas", "onDataChange:snapshot ")
-                                FireObj.refChatList().child(receiverId).child("id").setValue(receiverId)
+                                FireObj.refChatList().child(receiverId).child("id")
+                                    .setValue(receiverId)
                                 FireObj.refChatListReceiver(receiverId)
                             }
                         }
@@ -182,5 +188,33 @@ class MessageChatActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    fun seenMessage(userId: String) {
+
+        seenListener = object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (chatlist in snapshot.children) {
+                    val chat = chatlist.getValue(Chat::class.java)
+                    if (chat!!.receiver == FireObj.userId && chat.sender == userId) {
+                        val hashMap = HashMap<String, Any>()
+                        hashMap["isSeen"] = true
+                        Log.d("vasea", "onDataChange: seen ")
+                        chatlist.ref.updateChildren(hashMap)
+                    }
+                }
+            }
+
+        }
+        reference.addValueEventListener(seenListener)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        reference.removeEventListener(seenListener)
     }
 }
